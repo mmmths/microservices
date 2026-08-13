@@ -1,0 +1,21 @@
+# Dependencies
+**/node_modules/
+
+# Environment variables
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build
+**/dist/
+**/build/
+
+# Tests
+**/coverage/
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
