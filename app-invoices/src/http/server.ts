@@ -1,3 +1,5 @@
+import '@opentelemetry/auto-instrumentations-node/register'
+
 import '../broker/subscriber.ts'
 
 import {fastify} from 'fastify'
@@ -22,6 +24,6 @@ import { serializerCompiler,
     return reply.status(200).send({message: 'Server is healthy'})
  })
 
- app.listen({host: '0.0.0.0', port: 3333}).then(() => {
+ app.listen({host: '0.0.0.0', port: 3334}).then(() => {
     console.log('[Invoices] HTTP Server running on http://localhost:3333')
  })

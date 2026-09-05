@@ -1,3 +1,5 @@
+import '@opentelemetry/auto-instrumentations-node/register'
+
 import {fastify} from 'fastify'
 import {fastifyCors} from '@fastify/cors'
 import {z} from 'zod'
@@ -5,11 +7,14 @@ import { serializerCompiler,
     validatorCompiler,
     type ZodTypeProvider
  } from 'fastify-type-provider-zod'
+ import { db } from '../db/client.ts'
+ import {randomUUID} from 'node:crypto'
+ import {trace} from '@opentelemetry/api'
+ import { schema } from '../db/schema/index.ts'
+ import {setTimeout} from 'node:timers/promises'
  import {channels} from '../broker/channels/index.ts'
-import { schema } from '../db/schema/index.ts'
-import { db } from '../db/client.ts'
-import {randomUUID} from 'node:crypto'
 import { dispatchOrderCreated } from '../broker/messages/order-created.ts'
+import { tracer } from '../tracer/tracer.ts'
 
  const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -40,14 +45,6 @@ import { dispatchOrderCreated } from '../broker/messages/order-created.ts'
         amount
     })))
 
-    dispatchOrderCreated({
-        orderId,
-        amount,
-        customer: {
-            id: '1',
-        }
-    })  
-
     await db.insert(schema.orders).values({
         id: orderId,
         customerId: '1',
@@ -55,6 +52,21 @@ import { dispatchOrderCreated } from '../broker/messages/order-created.ts'
         status: 'pending',
         createdAt: new Date(),
     })
+
+   const span = tracer.startSpan('I think is in here')
+   span.setAttribute('Test', 'Testando o span')
+    await setTimeout(2000)
+    span.end()
+
+    trace.getActiveSpan()?.setAttribute('order.id', orderId)
+
+    dispatchOrderCreated({
+        orderId,
+        amount,
+        customer: {
+            id: '1',
+        }
+    })  
 
     return reply.status(201).send({message: 'Order created', amount})
  })
