@@ -19,7 +19,8 @@ import { dispatchOrderCreated } from '../broker/messages/order-created.ts'
  app.register(fastifyCors, {
     origin: '*'
  })
-
+// horizontal scaling
+// Deploy: blue green deployment
  app.get('/health', (request, reply) => {
     return reply.status(200).send({message: 'Server is healthy'})
  })
@@ -34,14 +35,18 @@ import { dispatchOrderCreated } from '../broker/messages/order-created.ts'
     const {amount} = request.body
     const orderId = randomUUID()
 
+    channels.orders.sendToQueue('orders', Buffer.from(JSON.stringify({
+        orderId,
+        amount
+    })))
+
     dispatchOrderCreated({
         orderId,
         amount,
         customer: {
-            id: '1'
+            id: '1',
         }
-    })
-
+    })  
 
     await db.insert(schema.orders).values({
         id: orderId,
